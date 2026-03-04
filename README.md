@@ -1,2 +1,0 @@
-# identity-sdk
-identity-sdk
