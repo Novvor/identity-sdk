@@ -4,6 +4,7 @@ namespace Novvor\Identity;
 
 use GuzzleHttp\Client;
 use Illuminate\Support\ServiceProvider;
+use Novvor\Identity\Auth\IdentityErrorSurfaceRedirector;
 use Novvor\Identity\Jwt\JwtVerifier;
 use Novvor\Identity\Sso\SsoExchangeClient;
 use Psr\SimpleCache\CacheInterface;
@@ -12,6 +13,8 @@ final class IdentityServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->mergeConfigFrom(__DIR__.'/../config/identity.php', 'identity');
+
         $this->app->singleton(IdentityConfig::class, function (): IdentityConfig {
             $config = (array) config('identity', []);
 
@@ -50,5 +53,16 @@ final class IdentityServiceProvider extends ServiceProvider
                 http: $app->make(Client::class),
             );
         });
+
+        $this->app->singleton(IdentityErrorSurfaceRedirector::class);
+    }
+
+    public function boot(): void
+    {
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../config/identity.php' => config_path('identity.php'),
+            ], 'novvor-identity-config');
+        }
     }
 }

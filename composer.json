@@ -1,18 +1,16 @@
 {
   "$schema": "https://getcomposer.org/schema.json",
   "name": "novvor/identity-sdk",
-  "version": "1.0.0",
-  "description": "Novvor Identity SDK (JWT verification, JWKS client, SSO exchange client, session mapping).",
+  "description": "Novvor Identity SDK (JWT verification, JWKS client, SSO exchange client, session mapping, auth error surface).",
   "type": "library",
   "license": "proprietary",
   "require": {
     "php": "^8.2",
     "firebase/php-jwt": "^7.0",
     "guzzlehttp/guzzle": "^7.0",
-    "psr/simple-cache": "^3.0"
-  },
-  "suggest": {
-    "illuminate/support": "Required only when using the Laravel ServiceProvider adapter."
+    "psr/simple-cache": "^3.0",
+    "illuminate/http": "^12.0|^13.0",
+    "illuminate/support": "^12.0|^13.0"
   },
   "autoload": {
     "psr-4": {
