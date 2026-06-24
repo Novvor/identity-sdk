@@ -1,6 +1,7 @@
 {
   "$schema": "https://getcomposer.org/schema.json",
   "name": "novvor/identity-sdk",
+  "version": "1.1.1",
   "description": "Novvor Identity SDK (JWT verification, JWKS client, SSO exchange client, session mapping, auth error surface).",
   "type": "library",
   "license": "proprietary",
