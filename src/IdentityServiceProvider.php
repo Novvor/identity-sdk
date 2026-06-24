@@ -5,7 +5,11 @@ namespace Novvor\Identity;
 use GuzzleHttp\Client;
 use Illuminate\Support\ServiceProvider;
 use Novvor\Identity\Auth\IdentityErrorSurfaceRedirector;
+use Novvor\Identity\Contracts\IdentitySessionMapperInterface;
+use Novvor\Identity\Contracts\IdentityTokenValidationPolicyInterface;
+use Novvor\Identity\Jwt\IdentityTokenValidationPolicy;
 use Novvor\Identity\Jwt\JwtVerifier;
+use Novvor\Identity\Session\IdentitySessionMapper;
 use Novvor\Identity\Sso\SsoExchangeClient;
 use Psr\SimpleCache\CacheInterface;
 
@@ -44,6 +48,7 @@ final class IdentityServiceProvider extends ServiceProvider
                 config: $app->make(IdentityConfig::class),
                 http: $app->make(Client::class),
                 cache: $cache,
+                tokenPolicy: $app->make(IdentityTokenValidationPolicyInterface::class),
             );
         });
 
@@ -53,6 +58,21 @@ final class IdentityServiceProvider extends ServiceProvider
                 http: $app->make(Client::class),
             );
         });
+
+        $identityConfig = (array) config('identity', []);
+        $tokenValidationPolicy = (string) ($identityConfig['token_validation_policy'] ?? IdentityTokenValidationPolicy::class);
+        if (is_subclass_of($tokenValidationPolicy, IdentityTokenValidationPolicyInterface::class) || is_a($tokenValidationPolicy, IdentityTokenValidationPolicyInterface::class, true)) {
+            $this->app->bind(IdentityTokenValidationPolicyInterface::class, $tokenValidationPolicy);
+        } else {
+            $this->app->bind(IdentityTokenValidationPolicyInterface::class, IdentityTokenValidationPolicy::class);
+        }
+
+        $sessionMapper = (string) ($identityConfig['session_mapper'] ?? IdentitySessionMapper::class);
+        if (is_subclass_of($sessionMapper, IdentitySessionMapperInterface::class) || is_a($sessionMapper, IdentitySessionMapperInterface::class, true)) {
+            $this->app->bind(IdentitySessionMapperInterface::class, $sessionMapper);
+        } else {
+            $this->app->bind(IdentitySessionMapperInterface::class, IdentitySessionMapper::class);
+        }
 
         $this->app->singleton(IdentityErrorSurfaceRedirector::class);
     }

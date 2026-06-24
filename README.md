@@ -40,3 +40,88 @@ return [
 ```
 
 No enviar tokens, secrets, authorization codes, OTP/MFA codes ni stack traces en `message`.
+
+---
+
+## Modelo recomendado para usarlo como "Auth0 interno"
+
+Si el objetivo es empaquetar este SDK como producto de identidad para terceros, te conviene esta separación:
+
+1. **API pública del SDK** (viene en `novvor/identity-sdk`):
+   - Verificación y parsing de JWT/JWKS.
+   - Cliente SSO para exchange de código.
+   - Mapper de sesión base.
+   - Configuración y provider de Laravel.
+   - Superficie de errores estandarizada (`IdentityErrorSurfaceRedirector`).
+
+2. **Reglas privadas de producto (en un módulo separado de cada app)**:
+   - Reglas de riesgo/antifraude.
+   - Políticas de sesión avanzadas por tenant.
+   - Auditoría legal/financiera de autenticación.
+   - Connectores de identidad adicionales (OAuth/SAML/B2B).
+
+La idea es exponer una API estable y establecida desde el SDK, y que cada aplicación
+inyecte sus restricciones desde su propio layer sin modificar el núcleo.
+
+### Extensión para apps consumidoras
+
+Implementación base sugerida:
+
+```php
+// app/Providers/IdentityOverridesServiceProvider.php
+
+use Novvor\Identity\Auth\IdentityErrorSurfaceRedirector;
+use Novvor\Identity\Contracts\IdentitySessionMapperInterface;
+use Novvor\Identity\Contracts\IdentityTokenValidationPolicyInterface;
+use Novvor\Identity\Session\IdentitySessionMapper;
+use Novvor\Identity\Jwt\IdentityTokenValidationPolicy;
+use Novvor\Identity\YourTenantNamespace\Auth\TenantIdentitySessionMapper;
+use Novvor\Identity\YourTenantNamespace\Auth\TenantIdentityTokenPolicy;
+
+class IdentityOverridesServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        $this->app->bind(IdentitySessionMapperInterface::class, TenantIdentitySessionMapper::class);
+        $this->app->bind(IdentityTokenValidationPolicyInterface::class, TenantIdentityTokenPolicy::class);
+
+        $this->app->bind(IdentityErrorSurfaceRedirector::class, function () {
+            return new IdentityErrorSurfaceRedirector();
+        });
+    }
+}
+```
+
+Alternativamente, también puede configurarse por `config/identity.php` sin ServiceProvider extra:
+
+```php
+return [
+    'token_validation_policy' => TenantIdentityTokenPolicy::class,
+    'session_mapper' => TenantIdentitySessionMapper::class,
+];
+```
+
+Qué hace cada contrato:
+
+- `IdentityTokenValidationPolicyInterface`
+  - Valida claims y metadatos del JWT.
+  - Útil para reglas de tenant, risk-score, claims personalizados o cambios de issuer/aud.
+- `IdentitySessionMapperInterface`
+  - Define cómo se transforma el payload del token en sesión de aplicación.
+  - Útil para mapear campos corporativos, claims anidados o metadatos de autorización por app.
+
+No toques el SDK para cambiar reglas de producto por cliente.
+
+### Recomendación operativa para repositorios
+
+- Mantener `novvor/identity-sdk` **público** facilita:
+  - instaladores sin token de GitHub,
+  - versiones semánticas limpias (`1.x`, `2.x`),
+  - adopción por terceros.
+- Mantener lógica sensible en capas privadas, no en el SDK público.
+
+### Señal de que ya está listo como producto
+
+- El SDK no depende de código del tenant específico.
+- Los consumidores pueden integrarlo sin tocar nada más que config + eventos/mapeos.
+- Las mejoras de identidad del negocio se entregan en módulos/servicios externos del ecosistema.

@@ -11,6 +11,9 @@ $appKey = env('IDENTITY_ERROR_APP_KEY')
     ?: env('APP_NAME', 'external-app');
 
 return [
+    'token_validation_policy' => Novvor\Identity\Jwt\IdentityTokenValidationPolicy::class,
+    'session_mapper' => Novvor\Identity\Session\IdentitySessionMapper::class,
+
     'error_surface' => [
         'identity_base_url' => rtrim((string) $identityBaseUrl, '/'),
         'app_key' => $appKey,

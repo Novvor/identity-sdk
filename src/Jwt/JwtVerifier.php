@@ -6,13 +6,12 @@ use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use GuzzleHttp\ClientInterface;
+use Novvor\Identity\Contracts\IdentityTokenValidationPolicyInterface;
 use Novvor\Identity\IdentityConfig;
 use Psr\SimpleCache\CacheInterface;
 
 final class JwtVerifier
 {
-    private const SUPPORTED_VERSION = '1.0';
-
     /** @var array<string, array{expires_at:int, jwks:array<string,mixed>}> */
     private array $jwksMemoryCache = [];
 
@@ -21,6 +20,7 @@ final class JwtVerifier
         private readonly ClientInterface $http,
         private readonly ?JwksClient $jwksClient = null,
         private readonly ?CacheInterface $cache = null,
+        private readonly ?IdentityTokenValidationPolicyInterface $tokenPolicy = null,
     ) {
     }
 
@@ -34,23 +34,7 @@ final class JwtVerifier
         }
 
         [$header, $payload] = $this->decodeHeaderAndPayload($jwt);
-
-        $alg = (string) ($header['alg'] ?? '');
         $kid = (string) ($header['kid'] ?? '');
-
-        if (strtoupper($alg) !== 'RS256' || $kid === '') {
-            throw TokenValidationException::invalid('invalid_header', 'Invalid token header.');
-        }
-
-        $issuer = (string) ($payload['iss'] ?? '');
-        if ($issuer !== $this->config->issuer) {
-            throw TokenValidationException::invalid('invalid_issuer', 'Invalid token issuer.');
-        }
-
-        $aud = $payload['aud'] ?? null;
-        if (! is_string($aud) || ! hash_equals($expectedAud, $aud)) {
-            throw TokenValidationException::invalid('invalid_audience', 'Invalid token audience.');
-        }
 
         $now = time();
         $skew = $this->config->clockSkewSeconds;
@@ -66,28 +50,12 @@ final class JwtVerifier
             throw TokenValidationException::invalid('token_expired', 'Token expired.');
         }
 
-        $tenantId = (string) ($payload['tenant_id'] ?? '');
-        if ($tenantId === '') {
-            throw TokenValidationException::invalid('missing_tenant_id', 'Invalid token payload.');
-        }
-
-        $jti = (string) ($payload['jti'] ?? '');
-        if ($jti === '') {
-            throw TokenValidationException::invalid('missing_jti', 'Invalid token payload.');
-        }
-
-        $ver = $payload['ver'] ?? null;
-        if ($ver === null) {
-            $ver = self::SUPPORTED_VERSION;
-        }
-
-        if (! is_string($ver) || $ver === '') {
-            throw TokenValidationException::invalid('invalid_version', 'Invalid token version.');
-        }
-
-        if ($ver !== self::SUPPORTED_VERSION) {
-            throw new TokenValidationException('unsupported_version', 'Unsupported token version.', 401);
-        }
+        ($this->tokenPolicy ?? new IdentityTokenValidationPolicy())->assertValidPayload(
+            $this->config,
+            $expectedAud,
+            $header,
+            $payload,
+        );
 
         $jwks = $this->getJwks(forceRefresh: false);
 

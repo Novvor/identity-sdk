@@ -2,7 +2,9 @@
 
 namespace Novvor\Identity\Session;
 
-final class IdentitySessionMapper
+use Novvor\Identity\Contracts\IdentitySessionMapperInterface;
+
+final class IdentitySessionMapper implements IdentitySessionMapperInterface
 {
     /**
      * @param array<string, mixed> $payload
@@ -32,3 +34,4 @@ final class IdentitySessionMapper
         ];
     }
 }
+
