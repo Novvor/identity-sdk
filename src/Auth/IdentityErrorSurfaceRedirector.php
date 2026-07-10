@@ -20,7 +20,10 @@ final class IdentityErrorSurfaceRedirector
     {
         $request ??= request();
 
-        $baseUrl = rtrim((string) config('identity.error_surface.identity_base_url', 'https://identity.enixconsole.test'), '/');
+        $baseUrl = rtrim((string) config('identity.error_surface.identity_base_url', ''), '/');
+        if ($baseUrl === '' || filter_var($baseUrl, FILTER_VALIDATE_URL) === false) {
+            throw new \LogicException('IDENTITY_ERROR_SURFACE_BASE_URL must be configured with an absolute URL.');
+        }
         $path = '/'.ltrim((string) config('identity.error_surface.path', '/auth/identity/error'), '/');
         $code = $this->safeToken((string) ($payload['code'] ?? config('identity.error_surface.default_code', 'identity_login_failed')));
         $message = $this->safeMessage((string) ($payload['message'] ?? config('identity.error_surface.default_message', 'No se pudo completar el inicio de sesión.')));

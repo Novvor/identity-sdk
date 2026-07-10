@@ -3,7 +3,7 @@
 $identityBaseUrl = env('IDENTITY_ERROR_SURFACE_BASE_URL')
     ?: env('IDENTITY_OIDC_PUBLIC_BASE_URL')
     ?: env('IDENTITY_OIDC_ISSUER')
-    ?: 'https://identity.enixconsole.test';
+    ?: '';
 
 $appKey = env('IDENTITY_ERROR_APP_KEY')
     ?: env('IDENTITY_APP_KEY')

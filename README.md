@@ -43,6 +43,17 @@ No enviar tokens, secrets, authorization codes, OTP/MFA codes ni stack traces en
 
 ---
 
+## Estado de distribución
+
+`novvor/identity-sdk` es un paquete de compatibilidad de la línea `1.x`. Debe
+consumirse desde releases taggeados y un repositorio privado. No contiene APIs
+de administración, App Ops, políticas de tenant ni secretos. La siguiente línea
+de producto separa explícitamente `identity-contracts`, `identity-sdk-php`,
+`identity-admin-sdk-php` e `identity-sdk-testing`.
+
+Configura siempre `IDENTITY_ERROR_SURFACE_BASE_URL` o `IDENTITY_OIDC_ISSUER`.
+El SDK ya no usa un host productivo por defecto.
+
 ## Modelo recomendado para usarlo como "Auth0 interno"
 
 Si el objetivo es empaquetar este SDK como producto de identidad para terceros, te conviene esta separación:
@@ -114,11 +125,10 @@ No toques el SDK para cambiar reglas de producto por cliente.
 
 ### Recomendación operativa para repositorios
 
-- Mantener `novvor/identity-sdk` **público** facilita:
-  - instaladores sin token de GitHub,
-  - versiones semánticas limpias (`1.x`, `2.x`),
-  - adopción por terceros.
-- Mantener lógica sensible en capas privadas, no en el SDK público.
+- Mantener los SDKs de Novvor **privados** mientras se estabilizan contratos,
+  distribución Composer y governance de seguridad.
+- Mantener lógica sensible en capas privadas; la superficie cliente nunca
+  incluye operaciones administrativas, soporte o App Ops.
 
 ### Señal de que ya está listo como producto
 

@@ -1,0 +1,5 @@
+/src/Jwt/ @Novvor/identity-team @Novvor/security-team
+/src/Auth/ @Novvor/identity-team
+/src/Sso/ @Novvor/identity-team
+/composer.json @Novvor/identity-team
+/.github/ @Novvor/platform-team

@@ -1,0 +1,23 @@
+name: Identity SDK Governance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  package-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, openssl
+      - run: composer validate --strict
+      - run: find src config -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Reject privileged SDK surface
+        run: '! rg -n "adminRequest\\(|executeAnyOperation\\(|grantAllScopes\\(|BEGIN (RSA|EC|OPENSSH|PRIVATE) KEY" src config'
