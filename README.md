@@ -1,5 +1,21 @@
 # Novvor Identity SDK
 
+> [!WARNING]
+> This legacy Laravel compatibility package is deprecated and no longer receives
+> feature development. New integrations must use
+> [`novvor/identity-sdk-php`](https://github.com/Novvor/identity-sdk-php).
+> Protocol constants are published separately as
+> [`novvor/identity-contracts`](https://github.com/Novvor/identity-contracts),
+> and test fakes as
+> [`novvor/identity-sdk-testing`](https://github.com/Novvor/identity-sdk-testing).
+
+## Migration
+
+Do not install both SDK generations in a new application. Migrate authentication
+flows to the OIDC Authorization Code with PKCE APIs in `identity-sdk-php`, retain
+server-side validation of state and nonce, and remove this package after all
+legacy namespace references have been replaced.
+
 SDK oficial para integrar apps Laravel con Novvor Cloud Identity.
 
 Incluye:
